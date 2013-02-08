@@ -64,7 +64,7 @@ define('Training/ActivityEditorProjectsTab', [
                 //define the columns:
                 var columns = [
                     {
-                        field: 'Contact.FullName',
+                        field: 'FullName',
                         name: 'Full Name',
                         width: '60px',
                         editable: false //we cannot make this editable since it is really a field in another table
@@ -82,15 +82,15 @@ define('Training/ActivityEditorProjectsTab', [
                     storeOptions: {
                         service: sDataServiceRegistry.getSDataService('dynamic'),
                         resourceKind: 'clientprojectcontacts',
-                        select: ['Contact/FullName', 'Role'], //what fields do we need from our table and relationship?
-						include: ['ClientProject/Activities'],
-                        sort: [{ attribute: 'ClientProject/StartDate'}] //Can we sort by a related table?
+                        select: ['Contact.FullName', 'Role'], //what fields do we need from our table and relationship?
+						include: ['ClientProject.Activities'],
+                        sort: [{ attribute: 'ClientProject.StartDate'}] //Can we sort by a related table?
                     },
                     slxContext: { 'workspace': '', tabId: '' },
                     contextualCondition: function () {
-						//var contextSvc = Sage.Services.getService('ClientEntityContext');
-						debugger; //not sure if I can get to the activities properties here or how.
-                        return 'Acitivity.Id eq \'' + utility.getCurrentEntityId() + '\'';
+						
+						//not sure if I can get to the activities properties here or how.
+                        return 'ClientProject.Activities.Id eq \'' + utility.getCurrentEntityId() + '\'';
                     },
                     id: this.id + '_projectItems',
                     rowsPerPage: 40,
