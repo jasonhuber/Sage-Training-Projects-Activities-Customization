@@ -65,8 +65,9 @@ define('Training/ActivityEditorProjectsTab', [
                 //define the columns:
                 var columns = [
                     {
-                        field: 'FullName',
-                        name: 'Full Name',
+                        field: 'Contact.FullName',
+                        name: 'FullName',
+						label: 'Full Name',
                         width: '60px',
                         editable: false //we cannot make this editable since it is really a field in another table
                     }, {
@@ -142,6 +143,7 @@ define('Training/ActivityEditorProjectsTab', [
                     if ((!actid && gridmode !== 'insert') || (actid && gridmode === 'insert')) {
                         this._grid.set('mode', (!actid) ? 'insert' : '');
                     }
+					
                     this._grid.refresh();
                 }			
 			}

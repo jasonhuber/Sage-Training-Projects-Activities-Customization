@@ -48,7 +48,7 @@ define('Training/ActivityEditor', [
                 label: "", //no label for checkboxes. The label is added afterwards in the checkbox create.
                 class: "remove-padding checkbox-container"
             })
-            debugger;
+            //debugger;
             //Add project lookup container to the contact container that is already defined in the activity editor
             this.contactContainer.addChild(this.container_ProjectLup);      
             this.dateSection_AddEdit.addChild(this.container_ProjectCb);
