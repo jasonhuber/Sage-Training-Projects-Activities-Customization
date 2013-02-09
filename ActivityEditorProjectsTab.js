@@ -21,9 +21,10 @@ define('Training/ActivityEditorProjectsTab', [
             
             widgetTemplate: new Simplate([
                 '<div>',
-                    '<div id="{%= $.id %}_projectPlaceholder" dojoAttachPoint="_projectPlaceholder" class="tabContent" ><div dojoAttachPoint="lbl_ProjectDetails"></div>',
-					 '<div id="{%= $.id %}_ProjectGridPlaceholder" dojoAttachPoint="_ProjectGridPlaceholder" style="width:100%;height:100%"></div>',
+                    '<div id="{%= $.id %}_projectPlaceholder" dojoAttachPoint="_projectPlaceholder" class="tabContent" >',
+						'<div dojoAttachPoint="lbl_ProjectDetails"></div>',
 					'</div>',
+					'<div id="{%= $.id %}_projectGridPlaceholder" dojoAttachPoint="_projectGridPlaceholder" style="width:100%;height:100%"></div>',
                 '</div>'
             ]),
 			
@@ -88,7 +89,6 @@ define('Training/ActivityEditorProjectsTab', [
                     },
                     slxContext: { 'workspace': '', tabId: '' },
                     contextualCondition: function () {
-						
 						//not sure if I can get to the activities properties here or how.
                         return 'ClientProject.Activities.Id eq \'' + utility.getCurrentEntityId() + '\'';
                     },
@@ -96,7 +96,6 @@ define('Training/ActivityEditorProjectsTab', [
                     rowsPerPage: 40,
                     singleClickEdit: true
                 };
-
                 //setting it to insert mode will have it use the writableStore.  This prevents the new
                 // items from being posted to the server without the relationship to Activity.  When the
                 // activity is saved, we will add the relationship and save the items at that point.
@@ -105,7 +104,7 @@ define('Training/ActivityEditorProjectsTab', [
                     options.storeOptions['isInsertMode'] = true;
                 }
                 //create the grid
-                var grid = new SlxPreviewGrid.Grid(options, this._ProjectGridPlaceholder);
+                var grid = new SlxPreviewGrid.Grid(options, this._projectGridPlaceholder);
 
                 grid.setSortColumn('Role');
                 this._grid = grid._grid;

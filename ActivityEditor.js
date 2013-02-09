@@ -5,11 +5,12 @@ define('Training/ActivityEditor', [
     'dijit/form/TextBox',
     'dijit/layout/ContentPane',
     'Sage/MainView/ActivityMgr/ActivityEditor',
-	 'Training/ActivityEditorProjectsTab',
-	 'dojo/on',
-	'Sage/Data/SDataServiceRegistry'
+    'Training/ActivityEditorProjectsTab',
+    'dojo/on',
+    'Sage/Data/SDataServiceRegistry',
+    'dijit/form/CheckBox'
 ],
-function (declare, Lookup, TextBox, ContentPane, SageActivityEditor, ActivityEditorProjectsTab,on, sDataServiceRegistry) {
+    function (declare, Lookup, TextBox, ContentPane, SageActivityEditor, ActivityEditorProjectsTab, on, sDataServiceRegistry, CheckBox) {
     //This customization shows the following customizations to the activity editor:
     //  -Adding a new related entity, in this case Project
 
@@ -18,30 +19,43 @@ function (declare, Lookup, TextBox, ContentPane, SageActivityEditor, ActivityEdi
 
         lup_Project: false, //new Project Lookup attach point
         container_ProjectLup: null, //new Project lookup container attach point
+        
+        cb_Project: false, //new Project Checkbox attach point
+        container_ProjectCb: null, // new Poject checkbox attach point
+        
         constructor: function () {
             //In the chained constructor (see dojo documentation for widgets and widget lifecycle methods)
             // add the new controls to the list of controls that get enabled or disabled in certain circumstances.
             this.confirmationDisableList.push('lup_Project');
+            this.confirmationDisableList.push('cb_Project');
+            
             this.noEditDisableList.push('lup_Project');
-			//debugger;
-			//this does not work since it is using the activities system endpoint.
-			this._activityStore.include.push('ClientProject');
+            this.noEditDisableList.push('cb_Project');
+            //debugger;
+            //vvvvthis does not work since it is using the activities system endpoint.
+            this._activityStore.include.push('ClientProject');
         },
         postCreate: function () {
             this.inherited(arguments);
 
-            //Create new content pane control that will contian the new project luookup.
+            //Create new content pane control that will contain the new project lookup.
             this.container_ProjectLup = ContentPane({
                 label: "Project",
                 class: "remove-padding lookup-container"
             });
 
+            this.container_ProjectCb = ContentPane({
+                label: "", //no label for checkboxes. The label is added afterwards in the checkbox create.
+                class: "remove-padding checkbox-container"
+            })
+            debugger;
             //Add project lookup container to the contact container that is already defined in the activity editor
-            this.contactContainer.addChild(this.container_ProjectLup);             
-			/*
-			Now let's work on the new tab...
-			*/
-			 //Create new project tab
+            this.contactContainer.addChild(this.container_ProjectLup);      
+            this.dateSection_AddEdit.addChild(this.container_ProjectCb);
+            /*
+            Now let's work on the new tab...
+            */
+             //Create new project tab
             var projectTab = new ActivityEditorProjectsTab();
             // Create a new ContentPane with the project tab as the contents
             var cp = new ContentPane({
@@ -57,13 +71,14 @@ function (declare, Lookup, TextBox, ContentPane, SageActivityEditor, ActivityEdi
             on(cp, 'show', function () {
                 projectTab._tabShow();
             });
-			
-			/*end new tab*/
+            
+            /*end new tab*/
 
         },
         destroy: function () {
             //clean up the project lookup control in the destroy method
             this.lup_Project.destroy();
+            this.cb_Project.destroy();
             //make sure to call inherited so everything else gets destroyed.
             this.inherited(arguments);
         },
@@ -72,6 +87,7 @@ function (declare, Lookup, TextBox, ContentPane, SageActivityEditor, ActivityEdi
             // Since it is an override, be sure to call this.inherited(arguments);
             this.inherited(arguments);
             this.createProjectLookup();
+            this.createProjectCheckbox();
         },
        
         _manualBind: function () {
@@ -79,19 +95,19 @@ function (declare, Lookup, TextBox, ContentPane, SageActivityEditor, ActivityEdi
             this.inherited(arguments);
             if (this._activityData) {
                 var act = this._activityData;
-				//debugger;
-				var req = new Sage.SData.Client.SDataSingleResourceRequest(sDataServiceRegistry.getSDataService('dynamic'));
+                //debugger;
+                var req = new Sage.SData.Client.SDataSingleResourceRequest(sDataServiceRegistry.getSDataService('dynamic'));
                 var text = "";
-				req.setResourceKind('clientprojects');
+                req.setResourceKind('clientprojects');
                 req.setResourceSelector('"' + act.ClientProjectId + '"');
-				req.read({
+                req.read({
                     success: function (project) {
-					//debugger;
-						var mockProject = {
-							'$key': project.$key,
-							'$descriptor': project.Title 
-						};
-						this.lup_Project.set('selectedObject', mockProject);
+                    //debugger;
+                        var mockProject = {
+                            '$key': project.$key,
+                            '$descriptor': project.Title 
+                        };
+                        this.lup_Project.set('selectedObject', mockProject);
                     },
                     scope: this
                 });
@@ -102,7 +118,7 @@ function (declare, Lookup, TextBox, ContentPane, SageActivityEditor, ActivityEdi
             //This is necessary because we are manually binding that control because of the psuedo relationships
             // the activity entity has with other entities.
             this._activityData.ClientProjectId = (newProject) ? newProject['$key'] : '';
-		},
+        },
         _updateLookupSeedValues: function (accountId) {
             this.inherited(arguments);
             this.projectLookupConfig.seedValue = accountId;
@@ -169,6 +185,35 @@ function (declare, Lookup, TextBox, ContentPane, SageActivityEditor, ActivityEdi
 
             //this would be a good place to add event listeners for when other lookups change to add/change
             // prefilters, etc like what is done for the opportunity, ticket and contact lookups.
+        },
+        createProjectCheckbox: function()
+        {
+				var label = null;
+				
+				
+            this.cb_Project = new CheckBox({
+                        id: this.id + '_checkBox',
+                        name: 'cb_Project',
+                        value: 'Uses Projects: ',
+                        checked: true
+                    }),
+                    label;
+                
+                this.cb_Project.startup();
+             dojo.place(this.cb_Project.domNode, this.container_ProjectCb.domNode, 'only');
+			 
+           label = dojo.create(
+                    'label',
+                    {
+                      'for': this.cb_Project.id
+                    },
+                    this.cb_Project.domNode,
+                    'after');
+
+                label.innerHTML = "Uses Projects";
+				
+
+            dojo.create('br', {}, label, 'after');    
         }
     });
     return editor;
