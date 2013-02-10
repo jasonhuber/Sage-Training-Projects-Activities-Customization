@@ -23,6 +23,9 @@ define('Training/ActivityEditor', [
         cb_Project: false, //new Project Checkbox attach point
         container_ProjectCb: null, // new Poject checkbox attach point
         
+		projectTab : null, //project tab global
+		tab_cp: null, //the new tab contentpane global. 
+		
         constructor: function () {
             //In the chained constructor (see dojo documentation for widgets and widget lifecycle methods)
             // add the new controls to the list of controls that get enabled or disabled in certain circumstances.
@@ -52,23 +55,29 @@ define('Training/ActivityEditor', [
             //Add project lookup container to the contact container that is already defined in the activity editor
             this.contactContainer.addChild(this.container_ProjectLup);      
             this.dateSection_AddEdit.addChild(this.container_ProjectCb);
+			
+			/*perhaps here we can see if the checkbox should be enabled or not...
+			
+			
+			*/
+			
             /*
             Now let's work on the new tab...
             */
              //Create new project tab
-            var projectTab = new ActivityEditorProjectsTab();
+            projectTab = new ActivityEditorProjectsTab();
             // Create a new ContentPane with the project tab as the contents
-            var cp = new ContentPane({
+            tab_cp = new ContentPane({
                 id: 'projectTabPane',
                 title: 'Project Details',
                 'class': 'tabContent remove-padding'
             }, projectTab.domNode);
 
             //Add Project ContentPane to table container that is already defined in the activity editor
-            this.tc_EditActivity.addChild(cp);
+            this.tc_EditActivity.addChild(tab_cp);
             projectTab.actEditor = this;
             projectTab.startup();
-            on(cp, 'show', function () {
+            on(tab_cp, 'show', function () {
                 projectTab._tabShow();
             });
             
@@ -93,7 +102,7 @@ define('Training/ActivityEditor', [
         _manualBind: function () {
             //Another override.  Follow the same pattern of binding the lookup controls from the original editor
             this.inherited(arguments);
-            if (this._activityData) {
+            if (this._activityData.ClientProjectId) {
                 var act = this._activityData;
                 //debugger;
                 var req = new Sage.SData.Client.SDataSingleResourceRequest(sDataServiceRegistry.getSDataService('dynamic'));
@@ -111,7 +120,21 @@ define('Training/ActivityEditor', [
                     },
                     scope: this
                 });
-            }
+				this.cb_Project.set('checked', true);
+			}
+			else
+			{
+				var mockProject = {
+					'$key': '',
+					'$descriptor': '' 
+				};
+				this.lup_Project.set('selectedObject', mockProject);
+				this.tc_EditActivity.removeChild(tab_cp);
+				this.cb_Project.set('checked', false);
+				
+				this.container_ProjectLup.set('label','');
+				this.contactContainer.removeChild(this.container_ProjectLup);
+			}				
         },
         _projectChanged: function (newProject) {
             //This is not an override - it is the handler for the change event of the project lookup control.
@@ -188,20 +211,21 @@ define('Training/ActivityEditor', [
         },
         createProjectCheckbox: function()
         {
-				var label = null;
-				
+			var label = null;
 				
             this.cb_Project = new CheckBox({
                         id: this.id + '_checkBox',
                         name: 'cb_Project',
-                        value: 'Uses Projects: ',
-                        checked: true
+                        value: 'Uses Projects: '//,
+                        //checked: true
                     }),
                     label;
                 
+				
                 this.cb_Project.startup();
              dojo.place(this.cb_Project.domNode, this.container_ProjectCb.domNode, 'only');
 			 
+				
            label = dojo.create(
                     'label',
                     {
@@ -214,7 +238,33 @@ define('Training/ActivityEditor', [
 				
 
             dojo.create('br', {}, label, 'after');    
-        }
+			
+			//let's make a fucntion to call when the checkbox is changed. We might be able to hide and show the tab.
+            this.eventConnections.push(dojo.connect(this.cb_Project, 'onChange', this, '_cb_ProjectChecked'));
+
+        },
+		//this is the event that fires when the checkbox is checked or unchecked. It hids the projects tab.
+		//this will be diabled IF there is a clientprojectid on the activity (because then the activity definitely uses projects)
+		_cb_ProjectChecked: function()
+		{
+			//debugger;
+			//dijit.byId("projectTabPane").hide();
+			if(!this.cb_Project.checked)
+			{
+				this.tc_EditActivity.removeChild(tab_cp);
+			}
+			else
+			{
+				this.tc_EditActivity.addChild(tab_cp);
+			}
+			
+        
+		},
+		destroy: function () {
+			lup_Project.destroy();
+			cb_Project.destroy();
+            this.inherited(arguments);
+        },
     });
     return editor;
 });
