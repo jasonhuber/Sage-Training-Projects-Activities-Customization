@@ -132,8 +132,8 @@ define('Training/ActivityEditor', [
 				this.tc_EditActivity.removeChild(tab_cp);
 				this.cb_Project.set('checked', false);
 				
-				this.container_ProjectLup.set('label','');
-				this.contactContainer.removeChild(this.container_ProjectLup);
+			//	this.container_ProjectLup.set('label','');
+			//	this.contactContainer.removeChild(this.container_ProjectLup);
 			}				
         },
         _projectChanged: function (newProject) {
@@ -252,10 +252,13 @@ define('Training/ActivityEditor', [
 			if(!this.cb_Project.checked)
 			{
 				this.tc_EditActivity.removeChild(tab_cp);
+				//this.contactContainer.removeChild(this.container_ProjectLup);
 			}
 			else
 			{
+				//I think this actually throws an error if the tab is there already, but it is hanled ok bu dojo.
 				this.tc_EditActivity.addChild(tab_cp);
+				//this.contactContainer.addChild(this.container_ProjectLup);
 			}
 			
         

@@ -135,7 +135,6 @@ define('Training/ActivityEditorProjectsTab', [
                 });
 			
 				if (this._grid) {
-
                     //check to see if the activity is a new one or not so we can set the grid
                     // to be in the correct "mode".
                     var gridmode = this._grid.get('mode');
@@ -146,7 +145,78 @@ define('Training/ActivityEditorProjectsTab', [
 					
                     this._grid.refresh();
                 }			
-			}
+			},
+			   //our handler for the "add" button
+            addItem: function () {
+                //If we are not in insert mode, we should save existing changes before creating new items.
+                //This prevents loss of data.  After the data is saved, we can create the new item.
+                if (this._grid.mode !== 'insert') {
+                    this._grid.saveChanges(lang.hitch(this, this._doCreateItem));
+                } else {
+                    this._doCreateItem();
+                }
+            },
+            _doCreateItem: function () {
+                  this._grid.store.newItem({
+                    onComplete: function (agendaItem) {
+                        //After the datastore has created the item for us, we can set the relationship property
+                        var actid = utility.getCurrentEntityId();
+                        if (!actid) {
+                            actid = this.actEditor._makeTempID();
+                        }
+                        agendaItem.Activity = { '$key': actid };
+                        //Set a default item order for this agenda item
+                        agendaItem.ItemOrder = this._grid.rowCount + 1;
+                        //Add it to our list of new agenda items
+                        this._newItems.push(agendaItem);
+                        if (this._grid.mode === 'insert') {
+                            //if we are inserting the activity, just let the WritableStore cache it, we'll POST it later
+                            this._grid.store.addToCache(this, agendaItem, 1);
+                        } else {
+                            //if we are not in insert mode, the grid will have a WritableSDataStore, let it save the 
+                            //new item now so the refresh below will get the item.
+                            this._grid.store.saveNewEntity(agendaItem);
+                        }
+                        //refresh the list so we see the new item.
+                        this._grid.refresh();
+                    },
+                    scope: this
+                });
+            },
+            //Handler for when activities are saved (new or changed)
+            _activitySaved: function (activity) {
+                if (this._grid.mode === 'insert') {
+                    //If the grid is in insert mode, the activity was a new one so we need to set the 
+                    // relationship to the new Activity Id and then POST them
+					debugger;
+                    var actid = activity['$key'];
+                    for (var i = 0; i < this._newItems.length; i++) {
+                        var itm = this._newItems[i];
+                        itm['Activity'] = { '$key': actid };
+                        var req = new Sage.SData.Client.SDataSingleResourceRequest(sDataServiceRegistry.getSDataService('dynamic'))
+                            .setResourceKind('clientprojectcontacts')
+                            .create(itm, {
+                                success: function () {
+                                    console.log('saved item');
+                                },
+                                failure: function () {
+                                    console.log('item did not save');
+                                }
+                            });
+                    }
+                } else {
+                    //Because the grid was not in insert mode, the items had the correct relationship
+                    // we just need to PUT and data changes that happened.
+                    this._grid.saveChanges();
+                }
+            },
+			//Handler for when the activity dialog closes
+            _dialogHide: function () {
+                //just a little house cleaning.
+                this._newItems = [];
+                this._grid.store.clearCache();
+            },
+
         });
 		
         return agendaItemsTab;
