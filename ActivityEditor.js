@@ -25,6 +25,7 @@ define('Training/ActivityEditor', [
         
 		projectTab : null, //project tab global
 		tab_cp: null, //the new tab contentpane global. 
+		projectTabAdded: false, //keep track if we have the project tab added or not.
 		
         constructor: function () {
             //In the chained constructor (see dojo documentation for widgets and widget lifecycle methods)
@@ -75,6 +76,7 @@ define('Training/ActivityEditor', [
 
             //Add Project ContentPane to table container that is already defined in the activity editor
             this.tc_EditActivity.addChild(tab_cp);
+			projectTabAdded = true;
             projectTab.actEditor = this;
             projectTab.startup();
             on(tab_cp, 'show', function () {
@@ -130,6 +132,7 @@ define('Training/ActivityEditor', [
 				};
 				this.lup_Project.set('selectedObject', mockProject);
 				this.tc_EditActivity.removeChild(tab_cp);
+				projectTabAdded = false;
 				this.cb_Project.set('checked', false);
 				
 			//	this.container_ProjectLup.set('label','');
@@ -249,15 +252,18 @@ define('Training/ActivityEditor', [
 		{
 			//debugger;
 			//dijit.byId("projectTabPane").hide();
-			if(!this.cb_Project.checked)
+			if(!this.cb_Project.checked && projectTabAdded)
 			{
 				this.tc_EditActivity.removeChild(tab_cp);
+				projectTabAdded = false;
 				//this.contactContainer.removeChild(this.container_ProjectLup);
 			}
-			else
+			else if (!projectTabAdded)
 			{
 				//I think this actually throws an error if the tab is there already, but it is hanled ok bu dojo.
+				projectTabAdded = true;
 				this.tc_EditActivity.addChild(tab_cp);
+				
 				//this.contactContainer.addChild(this.container_ProjectLup);
 			}
 			

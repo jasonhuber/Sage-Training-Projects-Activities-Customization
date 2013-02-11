@@ -150,6 +150,7 @@ define('Training/ActivityEditorProjectsTab', [
             addItem: function () {
                 //If we are not in insert mode, we should save existing changes before creating new items.
                 //This prevents loss of data.  After the data is saved, we can create the new item.
+				debugger;
                 if (this._grid.mode !== 'insert') {
                     this._grid.saveChanges(lang.hitch(this, this._doCreateItem));
                 } else {
@@ -157,6 +158,7 @@ define('Training/ActivityEditorProjectsTab', [
                 }
             },
             _doCreateItem: function () {
+				debugger;
                   this._grid.store.newItem({
                     onComplete: function (agendaItem) {
                         //After the datastore has created the item for us, we can set the relationship property
