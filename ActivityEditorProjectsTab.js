@@ -11,20 +11,22 @@ define('Training/ActivityEditorProjectsTab', [
         'dojo/_base/lang',
 		'dojo/date',
 		'dojo/date/locale',
-		'dojo/string'
+		'dojo/string',
+		'Sage/UI/Controls/Lookup',
+
     ],
-    function (dojo, _Widget, _Templated, declare, sDataServiceRegistry, utility, SlxPreviewGrid, EditableGrid, lang,dojoDate, locale, dString) {
+    function (dojo, _Widget, _Templated, declare, sDataServiceRegistry, utility, SlxPreviewGrid, EditableGrid, lang,dojoDate, locale, dString, Lookup) {
         //The code to add it is below the declaration.
         var agendaItemsTab = declare('Training.ActivityEditorProjectsTab', [_Widget, _Templated], {
             actEditor: null,
             widgetsInTemplate: true,
-            
+            lu_Contact: null,
             widgetTemplate: new Simplate([
                 '<div>',
                     '<div id="{%= $.id %}_projectPlaceholder" dojoAttachPoint="_projectPlaceholder" class="tabContent" >',
 						'<div dojoAttachPoint="lbl_ProjectDetails"></div>',
 					'</div>',
-					'<div id="{%= $.id %}_projectGridPlaceholder" dojoAttachPoint="_projectGridPlaceholder" style="width:100%;height:100%"></div>',
+					'<div id="{%= $.id %}_projectGridPlaceholder" dojoAttachPoint="_projectGridPlaceholder" style="width:100%;height:50%"></div>',
                 '</div>'
             ]),
 			
@@ -47,6 +49,9 @@ define('Training/ActivityEditorProjectsTab', [
                 //listen for when activities are saved so we can ensure the correct relationships and save the project's contacts.
                 dojo.subscribe('/entity/activity/create', this, this._activitySaved);
                 dojo.subscribe('/entity/activity/change', this, this._activitySaved);
+				
+				//now let's make sure the lookup for contact is created and ready.
+				this.createContactLookup();
             },
 			//buildGrid actually sets up the SlxPreviewGrid and places it into our placeholder dive defined above: _ProjectGridPlaceholder
 			  _buildGrid: function () {
@@ -58,6 +63,13 @@ define('Training/ActivityEditorProjectsTab', [
                         imageClass: 'icon_plus_16x16',
                         handler: this.addItem,
                         tooltip: 'Add Project Contact',
+                        scope: this
+                    },
+                    {
+                        id: 'associationLookupAddItem',
+                        imageClass: 'icon_plus_16x16',
+                        handler: this.lookupContact,
+                        tooltip: 'Add SalesLogix Contact',
                         scope: this
                     },
                     'delete'
@@ -135,6 +147,7 @@ define('Training/ActivityEditorProjectsTab', [
                 });
 			
 				if (this._grid) {
+
                     //check to see if the activity is a new one or not so we can set the grid
                     // to be in the correct "mode".
                     var gridmode = this._grid.get('mode');
@@ -150,7 +163,6 @@ define('Training/ActivityEditorProjectsTab', [
             addItem: function () {
                 //If we are not in insert mode, we should save existing changes before creating new items.
                 //This prevents loss of data.  After the data is saved, we can create the new item.
-				debugger;
                 if (this._grid.mode !== 'insert') {
                     this._grid.saveChanges(lang.hitch(this, this._doCreateItem));
                 } else {
@@ -158,26 +170,19 @@ define('Training/ActivityEditorProjectsTab', [
                 }
             },
             _doCreateItem: function () {
-				debugger;
                   this._grid.store.newItem({
-                    onComplete: function (agendaItem) {
+                    onComplete: function (clientprojectcontactItem) {
                         //After the datastore has created the item for us, we can set the relationship property
-                        var actid = utility.getCurrentEntityId();
-                        if (!actid) {
-                            actid = this.actEditor._makeTempID();
-                        }
-                        agendaItem.Activity = { '$key': actid };
-                        //Set a default item order for this agenda item
-                        agendaItem.ItemOrder = this._grid.rowCount + 1;
-                        //Add it to our list of new agenda items
-                        this._newItems.push(agendaItem);
+                        clientprojectcontactItem.ClientProjectId = this.actEditor._activityData.ClientProjectId;
+						//Add it to our list of new agenda items
+                        this._newItems.push(clientprojectcontactItem);
                         if (this._grid.mode === 'insert') {
-                            //if we are inserting the activity, just let the WritableStore cache it, we'll POST it later
-                            this._grid.store.addToCache(this, agendaItem, 1);
+                            //if we are inserting the ClientProjectContact, just let the WritableStore cache it, we'll POST it later
+                            this._grid.store.addToCache(this, clientprojectcontactItem, 1);
                         } else {
                             //if we are not in insert mode, the grid will have a WritableSDataStore, let it save the 
                             //new item now so the refresh below will get the item.
-                            this._grid.store.saveNewEntity(agendaItem);
+                            this._grid.store.saveNewEntity(clientprojectcontactItem);
                         }
                         //refresh the list so we see the new item.
                         this._grid.refresh();
@@ -186,15 +191,13 @@ define('Training/ActivityEditorProjectsTab', [
                 });
             },
             //Handler for when activities are saved (new or changed)
-            _activitySaved: function (activity) {
+            _activitySaved: function (clientprojectcontact) {
+				debugger;
                 if (this._grid.mode === 'insert') {
                     //If the grid is in insert mode, the activity was a new one so we need to set the 
                     // relationship to the new Activity Id and then POST them
-					debugger;
-                    var actid = activity['$key'];
                     for (var i = 0; i < this._newItems.length; i++) {
                         var itm = this._newItems[i];
-                        itm['Activity'] = { '$key': actid };
                         var req = new Sage.SData.Client.SDataSingleResourceRequest(sDataServiceRegistry.getSDataService('dynamic'))
                             .setResourceKind('clientprojectcontacts')
                             .create(itm, {
@@ -218,8 +221,89 @@ define('Training/ActivityEditorProjectsTab', [
                 this._newItems = [];
                 this._grid.store.clearCache();
             },
+			createContactLookup: function () {
+            //Create the contacat lookup control
+            this.contactLookupConfig = {
+                id: '_activityProjectGridContact',
+                structure: [
+                    { defaultCell: {
+                        'sortable': true,
+                        'width': '150px',
+                        'editable': false,
+                        'propertyType': 'System.String',
+                        'excludeFromFilters': false,
+                        'useAsResult': false,
+                        'picklistName': null,
+                        'defaultValue': ''
+                    },
+                        cells: [
+                        {
+                            name: 'FullName',
+                            field: 'FullName'
+                        }
+                    ]
+                    }],
+                gridOptions: {
+                    contextualCondition: '',
+                    contextualShow: '',
+                    selectionMode: 'single'
+                },
+                storeOptions: {
+                    resourceKind: 'contacts',
+                    sort: [{ attribute: 'FullName'}]
+                },
+                isModal: true,
+                seedProperty: 'Account.Id',
+                seedValue: this.actEditor._activityData.AccountId,
+                overrideSeedValueOnSearch: true,
+                initialLookup: true,
+                preFilters: [],
+                dialogTitle: 'Lookup Project',
+                dialogButtonText: this.okText
+            };
+            this.lu_Contact = new Lookup({
+                id: 'lu_Contact',
+                allowClearingResult: true,
+                readonly: true,
+                showEntityInfoToolTip: false,
+                config: this.contactLookupConfig
+            });
+            //add the change event handler
+			dojo.connect(this.lu_Contact, 'onChange', this, '_lookupContactResult');
+            
+        },
+		lookupContact: function () {
+            this.lu_Contact.lookupButton.click();
+        },
+		_lookupContactResult: function (contact) {
+                this._addContactAssociation(contact);
+        },
+		_addContactAssociation: function (contact) {
+            this._grid.store.newItem({
+                    onComplete: function (clientprojectcontact) {
+                        //After the datastore has created the item for us, we can set the relationship property
+                        clientprojectcontact.ClientProjectId = this.actEditor._activityData.ClientProjectId;
+                        clientprojectcontact.ContactId = contact.$key;
+                        this._addAssociationToStore(clientprojectcontact);
+                       
+                    },
+                    scope: this
+                });
+            },
+            _addAssociationToStore: function (clientprojectcontact) {
 
+                this._newItems.push(clientprojectcontact);
+                if (this._grid.mode === 'insert') {
+                    //if we are inserting the activity, just let the WritableStore cache it, we'll POST it later
+                    this._grid.store.addToCache(this, clientprojectcontact, 1);
+                } else {
+                    //if we are not in insert mode, the grid will have a WritableSDataStore, let it save the 
+                    //new item now so the refresh below will get the item.
+                    this._grid.store.saveNewEntity(clientprojectcontact);
+                }
+                //refresh the list so we see the new item.
+                this._grid.refresh();
+            },
         });
-		
         return agendaItemsTab;
     });
