@@ -26,7 +26,7 @@ define('Training/ActivityEditorProjectsTab', [
                     '<div id="{%= $.id %}_projectPlaceholder" dojoAttachPoint="_projectPlaceholder" class="tabContent" >',
 						'<div dojoAttachPoint="lbl_ProjectDetails"></div>',
 					'</div>',
-					'<div id="{%= $.id %}_projectGridPlaceholder" dojoAttachPoint="_projectGridPlaceholder" style="width:100%;height:50%"></div>',
+					'<div id="{%= $.id %}_projectGridPlaceholder" dojoAttachPoint="_projectGridPlaceholder" style="width:100%;height:70%"></div>',
                 '</div>'
             ]),
 			
@@ -192,7 +192,6 @@ define('Training/ActivityEditorProjectsTab', [
             },
             //Handler for when activities are saved (new or changed)
             _activitySaved: function (clientprojectcontact) {
-				debugger;
                 if (this._grid.mode === 'insert') {
                     //If the grid is in insert mode, the activity was a new one so we need to set the 
                     // relationship to the new Activity Id and then POST them

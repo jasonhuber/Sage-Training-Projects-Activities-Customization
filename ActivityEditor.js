@@ -54,8 +54,9 @@ define('Training/ActivityEditor', [
             })
             //debugger;
             //Add project lookup container to the contact container that is already defined in the activity editor
-            this.contactContainer.addChild(this.container_ProjectLup);      
-            this.dateSection_AddEdit.addChild(this.container_ProjectCb);
+            //this.contactContainer.addChild(this.container_ProjectLup);      
+            this.dateSection_AddEdit.addChild(this.container_ProjectLup);      
+			this.dateSection_AddEdit.addChild(this.container_ProjectCb);
 			
 			/*perhaps here we can see if the checkbox should be enabled or not...
 			
@@ -135,8 +136,7 @@ define('Training/ActivityEditor', [
 				projectTabAdded = false;
 				this.cb_Project.set('checked', false);
 				
-			//	this.container_ProjectLup.set('label','');
-			//	this.contactContainer.removeChild(this.container_ProjectLup);
+		
 			}				
         },
         _projectChanged: function (newProject) {
