@@ -12,8 +12,7 @@ define('Training/ActivityEditorProjectsTab', [
 		'dojo/date',
 		'dojo/date/locale',
 		'dojo/string',
-		'Sage/UI/Controls/Lookup',
-
+		'Sage/UI/Controls/Lookup'
     ],
     function (dojo, _Widget, _Templated, declare, sDataServiceRegistry, utility, SlxPreviewGrid, EditableGrid, lang,dojoDate, locale, dString, Lookup) {
         //The code to add it is below the declaration.
@@ -29,9 +28,7 @@ define('Training/ActivityEditorProjectsTab', [
 					'<div id="{%= $.id %}_projectGridPlaceholder" dojoAttachPoint="_projectGridPlaceholder" style="width:100%;height:70%"></div>',
                 '</div>'
             ]),
-			
 			startup: function () {
-               
             //anything we need to do to get the tab going. There is no data yet, so you can set defaults on a grid for instance.
                //newitems is where we place items we want to add. We then watch for the save event of the activity and send these up via SData.
 			   //in _activitySaved
